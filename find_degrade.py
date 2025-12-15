@@ -13,7 +13,7 @@ Java8 (OpenJDK 1.8.0)
 """
 
 def find_ac_wa_pairs(input_file:str, output_file:str, problem_id:str=None, language:str=None):
-	print("--- Start Process find_ac_wa_pairs ---")
+	print(f"--- Start Process find_ac_wa_pairs ---")
 
 	# 1. 読み込み
 	df = pd.read_csv(
@@ -63,4 +63,4 @@ def find_ac_wa_pairs(input_file:str, output_file:str, problem_id:str=None, langu
 		print(output_df.head())
 
 if __name__ == '__main__':
-	find_ac_wa_pairs(INPUT_FILE, OUTPUT_FILE, PROBLEM_ID, LANGUAGE)
+	find_ac_wa_pairs(INPUT_FILE, OUTPUT_FILE, PROBLEM_ID , LANGUAGE)
