@@ -7,11 +7,11 @@ from tqdm import tqdm
 
 # --- 設定 ---
 INPUT_CSV = "ac_wa_pairs.csv"  # 前回の出力ファイル
-OUTPUT_DIR = "source_codes"         # 保存先フォルダ
-PROBLEM_ID = "abc190_c"             # 対象の問題ID (コンテストID特定に使用)
-SLEEP_TIME = 1.5                    # アクセス間隔(秒) ※重要: 1秒以上あけること
+OUTPUT_DIR = "source_codes"    # 保存先フォルダ
+CONTEST_ID = "typical90"       # 対象の問題ID (コンテストID特定に使用)
+SLEEP_TIME = 1.5               # アクセス間隔(秒) ※重要: 1秒以上あけること
 
-# --- Parserクラス (ご提示いただいたコードを流用) ---
+# --- Parserクラス ---
 class Parser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
@@ -60,18 +60,14 @@ def main():
     if not os.path.exists(OUTPUT_DIR):
         os.makedirs(OUTPUT_DIR)
 
-    # 2. コンテストIDの特定 (例: abc190_c -> abc190)
-    # 問題IDの最後の "_c" などを除くとコンテストIDになるケースが大半です
-    contest_id = PROBLEM_ID.split('_')[0] 
-
-    # 3. CSV読み込み
+    # 2. CSV読み込み
     print(f"Loading {INPUT_CSV}...")
     df = pd.read_csv(INPUT_CSV)
     
-    print(f"Target Contest: {contest_id}")
+    print(f"Target Contest: {CONTEST_ID}")
     print(f"Total pairs to download: {len(df)}")
 
-    # 4. ループ処理
+    # 3. ループ処理
     for index, row in tqdm(df.iterrows(), total=len(df)):
         user_id = row['user_id']
         ac_id = row['ac_id']
@@ -82,7 +78,7 @@ def main():
         ext = ".java" 
 
         # --- ACの取得 ---
-        ac_url = f"https://atcoder.jp/contests/{contest_id}/submissions/{ac_id}"
+        ac_url = f"https://atcoder.jp/contests/{CONTEST_ID}/submissions/{ac_id}"
         ac_code = get_submission_code(ac_url)
         
         if ac_code:
@@ -93,7 +89,7 @@ def main():
         time.sleep(SLEEP_TIME) # 待機
 
         # --- WAの取得 ---
-        wa_url = f"https://atcoder.jp/contests/{contest_id}/submissions/{wa_id}"
+        wa_url = f"https://atcoder.jp/contests/{CONTEST_ID}/submissions/{wa_id}"
         wa_code = get_submission_code(wa_url)
         
         if wa_code:

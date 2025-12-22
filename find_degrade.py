@@ -2,7 +2,7 @@ import pandas as pd
 
 INPUT_FILE = "submissions.csv"
 OUTPUT_FILE = "ac_wa_pairs.csv"
-PROBLEM_ID = "abc190_c"
+PROBLEM_ID = "typical90_a"
 LANGUAGE = "Java"
 
 """
