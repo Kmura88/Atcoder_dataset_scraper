@@ -2,7 +2,7 @@ import pandas as pd
 
 INPUT_FILE = "submissions.csv"
 OUTPUT_FILE = "ac_wa_pairs.csv"
-PROBLEM_ID = "typical90_a"
+PROBLEM_ID = "tessoku_book_a"
 LANGUAGE = "Java"
 
 """
@@ -25,7 +25,15 @@ def find_ac_wa_pairs(input_file:str, output_file:str, problem_id:str=None, langu
 	if problem_id:
 		df = df[df['problem_id'] == problem_id]
 	if language:
-		df = df[df['language'].str.startswith(language, na=False)]
+		# 言語が "Java" の場合のみ、JavaScript を除外する処理を追加
+		if language == "Java":
+			df = df[
+				df['language'].str.startswith("Java", na=False) & 
+				~df['language'].str.startswith("JavaScript", na=False)
+			]
+		else:
+			# それ以外は通常通り前方一致
+			df = df[df['language'].str.startswith(language, na=False)]
 
 	# 3. ACとWAだけに絞り、ユーザー・時間順にソート
 	# これにより、並び順は必ず ... -> AC -> WA -> ... のようになります
@@ -52,6 +60,10 @@ def find_ac_wa_pairs(input_file:str, output_file:str, problem_id:str=None, langu
 	]].copy()
 
 	output_df.columns = ['user_id', 'ac_id', 'ac_epoch', 'wa_id', 'wa_epoch']
+
+	# floatになった列をintに戻す 
+	output_df['ac_id'] = output_df['ac_id'].astype(int)
+	output_df['ac_epoch'] = output_df['ac_epoch'].astype(int)
 
 	# 保存
 	output_df.to_csv(output_file, index=False)

@@ -6,12 +6,12 @@ from html.parser import HTMLParser
 from tqdm import tqdm
 
 # --- 設定 ---
-INPUT_CSV = "ac_wa_pairs.csv"  # 前回の出力ファイル
-OUTPUT_DIR = "source_codes"    # 保存先フォルダ
-CONTEST_ID = "typical90"       # 対象の問題ID (コンテストID特定に使用)
-SLEEP_TIME = 1.5               # アクセス間隔(秒) ※重要: 1秒以上あけること
+INPUT_CSV = "ac_wa_pairs.csv"
+OUTPUT_DIR = "source_codes"
+CONTEST_ID = "tessoku-book"
+SLEEP_TIME = 1.5
 
-# --- Parserクラス ---
+# --- Parserクラス (変更なし) ---
 class Parser(HTMLParser):
     def __init__(self):
         HTMLParser.__init__(self)
@@ -21,7 +21,6 @@ class Parser(HTMLParser):
 
     def handle_starttag(self, tag, attrs):
         attrs = dict(attrs)
-        # AtCoderのソースコードは <pre id="submission-code"> 等で囲まれています
         if tag == "pre":
             self.data.append({})
             self.title = True
@@ -32,23 +31,27 @@ class Parser(HTMLParser):
             self.data[-1].update({"code": data})
             self.title = False
 
-# --- URLからコードを取得する関数 ---
+# --- URLからコードを取得する関数 (変更なし) ---
 def get_submission_code(url):
     try:
         req = urllib.request.Request(url)
         with urllib.request.urlopen(req) as res:
-            body = res.read().decode('utf-8') # decodeを追加
+            body = res.read().decode('utf-8')
             
         parser = Parser()
         parser.feed(body)
         parser.close()
         
         code = ""
-        # 抽出したデータの整形
         for i in parser.data:
             if "code" in i:
                 code = i['code'].replace("\r\n", "\n").replace("\t", "    ")
                 break
+        
+        # コードが空文字の場合も失敗とみなすならここでチェックしても良い
+        if not code:
+            return None
+            
         return code
     except Exception as e:
         print(f"Error fetching {url}: {e}")
@@ -73,31 +76,43 @@ def main():
         ac_id = row['ac_id']
         wa_id = row['wa_id']
         
-        # ファイルの拡張子を簡易判定 (Java想定)
-        # 必要に応じて row['ac_lang'] の中身を見て分岐してください (.py, .cpp 等)
-        ext = ".java" 
+        ext = ".java"
 
         # --- ACの取得 ---
         ac_url = f"https://atcoder.jp/contests/{CONTEST_ID}/submissions/{ac_id}"
         ac_code = get_submission_code(ac_url)
         
-        if ac_code:
-            filename = f"{OUTPUT_DIR}/{user_id}_{ac_id}_AC{ext}"
-            with open(filename, "w", encoding='utf-8') as f:
-                f.write(ac_code)
-        
-        time.sleep(SLEEP_TIME) # 待機
+        time.sleep(SLEEP_TIME) # AC取得後の待機
+
+        # ACが失敗していたら WA は取りに行かずにスキップ
+        if ac_code is None:
+            print(f"Skipping {user_id}: AC fetch failed.")
+            continue
 
         # --- WAの取得 ---
         wa_url = f"https://atcoder.jp/contests/{CONTEST_ID}/submissions/{wa_id}"
         wa_code = get_submission_code(wa_url)
         
-        if wa_code:
-            filename = f"{OUTPUT_DIR}/{user_id}_{wa_id}_WA{ext}"
-            with open(filename, "w", encoding='utf-8') as f:
-                f.write(wa_code)
+        time.sleep(SLEEP_TIME) # WA取得後の待機
 
-        time.sleep(SLEEP_TIME) # 待機
+        # WAが失敗していたら 保存せずにスキップ
+        if wa_code is None:
+            print(f"Skipping {user_id}: WA fetch failed.")
+            continue
+
+        # --- 両方成功した場合のみ保存 ---
+        if ac_code and wa_code:
+            # ACの保存
+            ac_filename = f"{OUTPUT_DIR}/{user_id}_{wa_id}/src_before/Main{ext}"
+            os.makedirs(os.path.dirname(ac_filename), exist_ok=True)
+            with open(ac_filename, "w", encoding='utf-8') as f:
+                f.write(ac_code)
+
+            # WAの保存
+            wa_filename = f"{OUTPUT_DIR}/{user_id}_{wa_id}/src/Main{ext}"
+            os.makedirs(os.path.dirname(wa_filename), exist_ok=True)
+            with open(wa_filename, "w", encoding='utf-8') as f:
+                f.write(wa_code)
 
 if __name__ == "__main__":
     main()

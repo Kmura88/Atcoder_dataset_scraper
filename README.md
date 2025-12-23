@@ -26,6 +26,12 @@ ACからWAになった提出を検索してCSV出力。
 ``` console
 python find_degrade.py
 ```
+### get_src
+find_degradeが作成したcsvを使ってsrcを取得する
+
+``` console
+python get_src.py
+```
 
 ### submissions.csvメモ
 CSVファイルであり、各行が以下の要素を持つ。右は例。
