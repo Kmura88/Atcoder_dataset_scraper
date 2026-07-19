@@ -34,7 +34,12 @@ class Parser(HTMLParser):
 # --- URLからコードを取得する関数 (変更なし) ---
 def get_submission_code(url):
     try:
-        req = urllib.request.Request(url)
+        req = urllib.request.Request(
+            url,
+            headers={
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36"
+            }
+        )
         with urllib.request.urlopen(req) as res:
             body = res.read().decode('utf-8')
             
@@ -48,7 +53,6 @@ def get_submission_code(url):
                 code = i['code'].replace("\r\n", "\n").replace("\t", "    ")
                 break
         
-        # コードが空文字の場合も失敗とみなすならここでチェックしても良い
         if not code:
             return None
             
